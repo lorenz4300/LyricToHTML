@@ -1,0 +1,43 @@
+name: Build Python to EXE
+
+# Triggers the workflow on a push to the main branch or allows manual triggering
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    # Must use Windows runner to generate a native Windows .exe file
+    runs-on: windows-latest
+
+    steps:
+    # 1. Check out the source code
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # 2. Set up the Python environment
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    # 3. Install project dependencies and PyInstaller
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if (Test-Path requirements.txt) { pip install -r requirements.txt }
+        pip install pyinstaller
+
+    # 4. Compile the script into a single .exe file
+    - name: Build EXE with PyInstaller
+      run: |
+        pyinstaller --onefile --noconsole LyricToHTML.py
+
+    # 5. Upload the compiled .exe as a build artifact
+    - name: Upload Executable Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-executable
+        path: dist/*.exe
